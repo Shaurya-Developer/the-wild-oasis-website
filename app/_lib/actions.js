@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { auth, signIn, signOut } from "./auth";
 import supabase from "./supabase";
+import { getBookings } from "./data-service";
 
 // ALl function should be async
 export async function updateGuest(formdata) {
@@ -28,7 +29,30 @@ export async function updateGuest(formdata) {
     throw new Error("Guest could not be updated");
   }
 
-  revalidatePath("/account/profile"); // revalidating our cache manually otherwise it will give us stale data stored in the cache for 30sec
+  revalidatePath("/account/profile"); // (on demand validation) revalidating our cache manually otherwise it will give us stale data stored in the cache for 30sec
+}
+
+export async function deleteReservation(bookingId) {
+  const session = await auth();
+  if (!session) throw new Error("You must be logged in");
+
+  // only allow user to delete only his own booking , otherwise he will be able to delete any booking using booking id as shown in lecture 484
+  const guestBookings = await getBookings(session.user.guestId);
+  const guestBookingId = guestBookings.map((booking) => booking.id);
+  if (!guestBookingId.includes(bookingId)) {
+    throw new Error("You are not allowed to delete this booking");
+  }
+
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId);
+
+  if (error) {
+    throw new Error("Booking could not be deleted");
+  }
+
+  revalidatePath("/account/reservations");
 }
 
 export async function signInAction() {
