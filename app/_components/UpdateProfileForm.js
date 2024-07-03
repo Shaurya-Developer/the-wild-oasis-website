@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { updateGuest } from "../_lib/actions";
 import { useFormStatus } from "react-dom";
+import SubmitButton from "./SubmitButton";
 // import SelectCountry from "./SelectCountry";
 
 function UpdateProfileForm({ children, guest }) {
@@ -65,12 +66,13 @@ function UpdateProfileForm({ children, guest }) {
       </div>
 
       <div className="flex justify-end items-center gap-6">
-        <Button />
+        <SubmitButton pendingLabel={"Updating..."}>Update Profile</SubmitButton>
       </div>
     </form>
   );
 }
 
+/*
 function Button() {
   const { pending } = useFormStatus(); // useFormStatus is a new react hook that help us to get information regarding the form, It must be used in a component that renders inside a form, not just the component that contains the form
   return (
@@ -82,5 +84,5 @@ function Button() {
     </button>
   );
 }
-
+*/
 export default UpdateProfileForm;

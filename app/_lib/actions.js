@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth, signIn, signOut } from "./auth";
 import supabase from "./supabase";
 import { getBookings } from "./data-service";
+import { RedirectType, redirect } from "next/navigation";
 
 // ALl function should be async
 export async function updateGuest(formdata) {
@@ -30,6 +31,42 @@ export async function updateGuest(formdata) {
   }
 
   revalidatePath("/account/profile"); // (on demand validation) revalidating our cache manually otherwise it will give us stale data stored in the cache for 30sec
+}
+
+export async function updateBooking(formdata) {
+  const bookingId = +formdata.get("bookingId");
+
+  //Authentication
+  const session = await auth();
+  if (!session) throw new Error("You must be logged in");
+
+  // Auhtorization
+
+  const guestBookings = await getBookings(session.user.guestId);
+  const guestBookingId = guestBookings.map((booking) => booking.id);
+
+  if (!guestBookingId.includes(bookingId)) {
+    throw new Error("You are not allowed to update this booking");
+  }
+
+  const numGuests = +formdata.get("numGuests");
+  const observations = formdata.get("observations");
+  const updatedFields = { numGuests, observations };
+
+  const { error } = await supabase
+    .from("bookings")
+    .update(updatedFields)
+    .eq("id", bookingId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error("Booking could not be updated");
+  }
+  revalidatePath("/account/reservations");
+  revalidatePath(`/account/reservations/edit/${bookingId}`);
+
+  redirect("/account/reservations");
 }
 
 export async function deleteReservation(bookingId) {
