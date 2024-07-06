@@ -5,7 +5,7 @@ import { deleteReservation } from "../_lib/actions";
 import { useTransition } from "react";
 import SpinnerMini from "./SpinnerMini";
 
-function DeleteReservation({ bookingId }) {
+function DeleteReservation({ bookingId, onDelete }) {
   /* we can make server action like this but as it is client component so we will not do like this
   function deleteReservation() {
     "use server";
@@ -17,7 +17,7 @@ function DeleteReservation({ bookingId }) {
 
   function handleDelete() {
     if (confirm("Are you sure you want to delete this reservation?"))
-      startTranistion(() => deleteReservation(bookingId));
+      startTranistion(() => onDelete(bookingId));
   }
   return (
     <button
